@@ -1,0 +1,37 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: |
+  101-kittens-carousel-static-website-ec2 Project
+
+Resources:
+  FatihInstance1:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !Ref LatestAmiId
+      InstanceType: t2.micro
+      KeyName: firstkey # Use your own key pair without ".pem"
+      SecurityGroups:
+        - fatih-first-sec-group
+      Tags:
+        - Key: Name
+          Value: FatihCFNInstance
+        - Key: Environment
+          Value: Dev
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash
+          yum update -y
+          yum install -y git
+          yum install -y httpd
+          cd /var/www/html
+          git clone https://github.com/mfaktasit/101-kittens-carousel-static-website-ec2.git
+          cd /var/www/html/101-kittens-carousel-static-website-ec2
+          cp cat0.jpg cat1.jpg cat2.jpg index.html ../
+          cd /var/www/html/
+          rm -r 101-kittens-carousel-static-website-ec2
+          systemctl start httpd.service
+          systemctl enable httpd.service
+
+Parameters:
+  LatestAmiId:
+    Type: "AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>"
+    Default: "/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2"
