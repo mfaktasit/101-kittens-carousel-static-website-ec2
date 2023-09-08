@@ -1,0 +1,49 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: |
+  101-kittens-carousel-static-website-ec2 Project
+
+Resources:
+  FatihInstanceSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allows acces on ports 80 and 22 # Required
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+
+  FatihInstance1:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !Ref LatestAmiId
+      InstanceType: t2.micro
+      KeyName: firstkey # Use your own key pair without ".pem"
+      SecurityGroups:
+        - !Ref FatihInstanceSG
+      Tags:
+        - Key: Name
+          Value: FatihCFNInstance
+        - Key: Environment
+          Value: Dev
+      UserData:
+        Fn::Base64: !Sub |
+          #! /bin/bash
+          yum update -y
+          yum install -y httpd
+          cd /var/www/html/
+          wget https://raw.githubusercontent.com/mfaktasit/101-kittens-carousel-static-website-ec2/main/cat0.jpg
+          wget https://raw.githubusercontent.com/mfaktasit/101-kittens-carousel-static-website-ec2/main/cat1.jpg
+          wget https://raw.githubusercontent.com/mfaktasit/101-kittens-carousel-static-website-ec2/main/cat2.jpg
+          wget https://raw.githubusercontent.com/mfaktasit/101-kittens-carousel-static-website-ec2/main/index.html
+          sudo chmod -R 777 /var/www/html/
+          sudo systemctl start httpd
+          sudo systemctl enable httpd
+Parameters:
+  LatestAmiId:
+    Type: "AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>"
+    Default: "/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2"
